@@ -46,6 +46,8 @@ int Tools::convert(int argc, char** argv) {
 					printf("Invalid mode provided");
 					return -1;
 				}
+
+				i++;
 			}
 			else if (strcmp(argv[i], "-f") == 0 || strcmp(argv[i], "--from") == 0) {
 				if (i + 1 >= argc) {
@@ -54,6 +56,7 @@ int Tools::convert(int argc, char** argv) {
 				}
 
 				from = argv[i + 1];
+				i++;
 			}
 			else if (strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--to") == 0) {
 				if (i + 1 >= argc) {
@@ -62,6 +65,7 @@ int Tools::convert(int argc, char** argv) {
 				}
 
 				to = argv[i + 1];
+				i++;
 			}
 		}
 	}
