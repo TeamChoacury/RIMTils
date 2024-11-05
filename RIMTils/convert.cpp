@@ -30,7 +30,7 @@ int Tools::convert(int argc, char** argv) {
 
 		for (size_t i = 2; i < argc; i++)
 		{
-			if (strcmp(argv[i], "-m") == 0 || strcmp(argv[i], "--mode")) {
+			if (strcmp(argv[i], "-m") == 0 || strcmp(argv[i], "--mode") == 0) {
 				if (i + 1 >= argc) {
 					printf("Unexpected amount of arguments provided");
 					return -1;
