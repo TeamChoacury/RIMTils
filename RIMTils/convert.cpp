@@ -2,8 +2,6 @@
 #include "Tools.h"
 
 int Tools::convert(int argc, char** argv) {
-	return -1;
-
 	if (argc == 2) {
 		printf("Convert mode arguments:\n\n");
 		printf("Argument    Meaning");
