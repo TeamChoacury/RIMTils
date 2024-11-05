@@ -29,5 +29,8 @@
     <ClInclude Include="Tools.h">
       <Filter>Tools</Filter>
     </ClInclude>
+    <ClInclude Include="Bitmap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
