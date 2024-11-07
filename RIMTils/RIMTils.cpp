@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cstring>
 #include "Tools.h"
 
 int main(int argc, char** argv)
