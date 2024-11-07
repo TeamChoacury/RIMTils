@@ -79,7 +79,7 @@ int Tools::convert(int argc, char** argv) {
 				printf("Error opening file");
 				return -1;
 			}
-			std::ifstream rimFile(to, std::ios::binary);
+			std::ofstream rimFile(to, std::ios::binary);
 			// It doesn't matter if this file doesn't exist, we override it anyway
 
 			BITMAPFILEHEADER bmFileHeader;
@@ -93,6 +93,48 @@ int Tools::convert(int argc, char** argv) {
 				printf("The provided file is not a bitmap");
 				return -1;
 			}
+
+			int bmRowSize = ((bmInfoHeader.biBitCount * bmInfoHeader.biWidth + 31) / 32) * 4;
+			std::vector<uint8_t> bmData(bmRowSize * abs(bmInfoHeader.biHeight));
+
+			bmFile.seekg(bmFileHeader.bfOffBits, std::ios::beg);
+			bmFile.read(reinterpret_cast<char*>(bmData.data()), bmData.size());
+			bmFile.close();
+
+			std::vector<uint8_t> rimData(bmInfoHeader.biWidth * bmInfoHeader.biHeight * 4);
+			for (size_t y = 0; y < bmInfoHeader.biHeight; y++)
+			{
+				for (size_t x = 0; x < bmInfoHeader.biWidth; x++)
+				{
+					int bmIndex = y * bmRowSize + x * 3;
+					int rimIndex = (y * bmInfoHeader.biWidth + x) * 4;
+
+					uint8_t b = bmData[bmIndex + 0];
+					uint8_t g = bmData[bmIndex + 1];
+					uint8_t r = bmData[bmIndex + 2];
+
+					rimData[rimIndex + 0] = r;	  // Red
+					rimData[rimIndex + 0] = g;    // Green
+					rimData[rimIndex + 0] = b;    // Blue
+					rimData[rimIndex + 0] = 0xFF; // Alpha
+				}
+			}
+
+			RIMFILEHEADER rimFileHeader = {
+				0x4D4952,
+				static_cast<uint32_t>(sizeof(RIMFILEHEADER) + sizeof(RIMINFOHEADER) + rimData.size()),
+				0, 0, sizeof(RIMFILEHEADER) + sizeof(RIMINFOHEADER)
+			};
+			RIMINFOHEADER rimInfoHeader = {
+				sizeof(RIMINFOHEADER), bmInfoHeader.biWidth, bmInfoHeader.biHeight,
+				1, 32, 0, static_cast<uint32_t>(rimData.size()),
+				bmInfoHeader.biXPelsPerMeter, bmInfoHeader.biYPelsPerMeter,
+				0, 0
+			};
+
+			rimFile.write(reinterpret_cast<const char*>(&rimFileHeader), sizeof(rimFileHeader));
+			rimFile.write(reinterpret_cast<const char*>(&rimInfoHeader), sizeof(rimInfoHeader));
+			rimFile.write(reinterpret_cast<const char*>(rimData.data()), rimData.size());
 
 			bmFile.close();
 			rimFile.close();
@@ -111,8 +153,8 @@ int Tools::convert(int argc, char** argv) {
 			rimFile.read(reinterpret_cast<char*>(&rimFileHeader), sizeof(rimFileHeader));
 			rimFile.read(reinterpret_cast<char*>(&rimInfoHeader), sizeof(rimInfoHeader));
 			
-			// 52494D is RIM in HEX
-			if (rimFileHeader.bfType != 0x52494D) {
+			// 4D4952 is RIM in HEX
+			if (rimFileHeader.bfType != 0x4D4952) {
 				printf("The provided file is not a RIM");
 				return -1;
 			}
