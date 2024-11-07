@@ -32,5 +32,8 @@
     <ClInclude Include="Bitmap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="RIM.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -1,6 +1,9 @@
 #include <iostream>
 #include <cstring>
+#include <fstream>
 #include "Tools.h"
+#include "Bitmap.h"
+#include "RIM.h"
 
 enum Mode {
 	ToBMP = 0,
@@ -26,8 +29,8 @@ int Tools::convert(int argc, char** argv) {
 		// - Every argument
 
 		Mode mode;
-		char* from;
-		char* to;
+		char* from = (char*)"";
+		char* to = (char*)"";
 
 		for (size_t i = 2; i < argc; i++)
 		{
@@ -68,6 +71,54 @@ int Tools::convert(int argc, char** argv) {
 				to = argv[i + 1];
 				i++;
 			}
+		}
+
+		if (mode == Mode::ToRIM) {
+			std::ifstream bmFile(from, std::ios::binary);
+			if (!bmFile) {
+				printf("Error opening file");
+				return -1;
+			}
+			std::ifstream rimFile(to, std::ios::binary);
+			// It doesn't matter if this file doesn't exist, we override it anyway
+
+			BITMAPFILEHEADER bmFileHeader;
+			BITMAPINFOHEADER bmInfoHeader;
+
+			bmFile.read(reinterpret_cast<char*>(&bmFileHeader), sizeof(bmFileHeader));
+			bmFile.read(reinterpret_cast<char*>(&bmInfoHeader), sizeof(bmInfoHeader));
+
+			// 4D42 is BM in HEX
+			if (bmFileHeader.bfType != 0x4D42) {
+				printf("The provided file is not a bitmap");
+				return -1;
+			}
+
+			bmFile.close();
+			rimFile.close();
+		}
+		else if (mode == Mode::ToBMP) {
+			std::ifstream rimFile(from, std::ios::binary);
+			if (!rimFile) {
+				printf("Error opening file");
+				return -1;
+			}
+			std::ifstream bmFile(to, std::ios::binary);
+
+			RIMFILEHEADER rimFileHeader;
+			RIMINFOHEADER rimInfoHeader;
+
+			rimFile.read(reinterpret_cast<char*>(&rimFileHeader), sizeof(rimFileHeader));
+			rimFile.read(reinterpret_cast<char*>(&rimInfoHeader), sizeof(rimInfoHeader));
+			
+			// 52494D is RIM in HEX
+			if (rimFileHeader.bfType != 0x52494D) {
+				printf("The provided file is not a RIM");
+				return -1;
+			}
+
+			rimFile.close();
+			bmFile.close();
 		}
 	}
 	else {
