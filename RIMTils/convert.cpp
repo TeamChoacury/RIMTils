@@ -17,12 +17,14 @@ int Tools::convert(int argc, char** argv) {
 		printf("-m, --mode  The mode (ToBMP, ToRIM)\n");
 		printf("-f, --from  The starting image\n");
 		printf("-t, --to    The end image\n");
-		printf("\nAll of these arguments are required\n");
+		printf("\nAll of the above arguments are required\n");
+		printf("-d, --debug Enables debug mode (Can slow it down)\n");
 
 		return 0;
 	}
 
-	if (argc == 8) {
+	// 8 excluding debug mode, 9 including
+	if (argc == 8 || argc == 9) {
 		// This includes:
 		// - RIMTils.exe
 		// - convert
@@ -31,6 +33,7 @@ int Tools::convert(int argc, char** argv) {
 		Mode mode;
 		char* from = (char*)"";
 		char* to = (char*)"";
+		bool debug = false;
 
 		for (size_t i = 2; i < argc; i++)
 		{
@@ -70,6 +73,9 @@ int Tools::convert(int argc, char** argv) {
 
 				to = argv[i + 1];
 				i++;
+			}
+			else if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--debug") == 0) {
+				debug = true;
 			}
 		}
 
@@ -112,7 +118,8 @@ int Tools::convert(int argc, char** argv) {
 					int rimIndex = (y * bmInfoHeader.biWidth + x) * 4;
 
 					if (bmIndex + 2 >= bmData.size() || rimIndex + 3 >= rimData.size()) {
-						printf("Failed to transfer pixel (%dx%d)", x, y);
+						printf("Failed to transfer pixel (%dx%d)\n", x, y);
+						continue;
 					}
 
 					uint8_t b = bmData[bmIndex + 0];
@@ -123,6 +130,11 @@ int Tools::convert(int argc, char** argv) {
 					rimData[rimIndex + 1] = g;    // Green
 					rimData[rimIndex + 2] = b;    // Blue
 					rimData[rimIndex + 3] = 0xFF; // Alpha
+
+					if (debug) {
+						printf("Pixel data at pos %dx%d: R%d G%d B%d A%d\n", x, y, rimData[rimIndex + 0],
+							rimData[rimIndex + 1], rimData[rimIndex + 2], rimData[rimIndex + 3]);
+					}
 				}
 			}
 
@@ -183,7 +195,8 @@ int Tools::convert(int argc, char** argv) {
 					int bmIndex = (y * rimInfoHeader.biWidth + x) * 4;
 
 					if (rimIndex + 2 >= rimData.size() || bmIndex + 3 >= bmData.size()) {
-						printf("Failed to transfer pixel (%dx%d)", x, y);
+						printf("Failed to transfer pixel (%dx%d)\n", x, y);
+						continue;
 					}
 
 					uint8_t r = rimData[rimIndex + 0];
@@ -194,6 +207,11 @@ int Tools::convert(int argc, char** argv) {
 					bmData[rimIndex + 0] = b;	 // Blue
 					bmData[rimIndex + 1] = g;    // Green
 					bmData[rimIndex + 2] = r;    // Red
+
+					if (debug) {
+						printf("Pixel data at pos %dx%d: B%d G%d R%d\n", x, y, bmData[rimIndex + 0],
+							bmData[rimIndex + 1], bmData[rimIndex + 2]);
+					}
 				}
 			}
 
