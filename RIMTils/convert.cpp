@@ -102,26 +102,32 @@ int Tools::convert(int argc, char** argv) {
 			bmFile.close();
 
 			std::vector<uint8_t> rimData(bmInfoHeader.biWidth * bmInfoHeader.biHeight * 4);
-			for (size_t y = 0; y < bmInfoHeader.biHeight; y++)
+			for (size_t y = 0; y < abs(bmInfoHeader.biHeight); y++)
 			{
 				for (size_t x = 0; x < bmInfoHeader.biWidth; x++)
 				{
-					int bmIndex = y * bmRowSize + x * 3;
+					//int bmIndex = y * bmRowSize + x * 3;
+					//int rimIndex = (y * bmInfoHeader.biWidth + x) * 4;
+					int bmIndex = y * bmRowSize + x * (bmInfoHeader.biBitCount / 8);
 					int rimIndex = (y * bmInfoHeader.biWidth + x) * 4;
+
+					if (bmIndex + 2 >= bmData.size() || rimIndex + 3 >= rimData.size()) {
+						printf("Failed to transfer pixel (%dx%d)", x, y);
+					}
 
 					uint8_t b = bmData[bmIndex + 0];
 					uint8_t g = bmData[bmIndex + 1];
 					uint8_t r = bmData[bmIndex + 2];
 
 					rimData[rimIndex + 0] = r;	  // Red
-					rimData[rimIndex + 0] = g;    // Green
-					rimData[rimIndex + 0] = b;    // Blue
-					rimData[rimIndex + 0] = 0xFF; // Alpha
+					rimData[rimIndex + 1] = g;    // Green
+					rimData[rimIndex + 2] = b;    // Blue
+					rimData[rimIndex + 3] = 0xFF; // Alpha
 				}
 			}
 
 			RIMFILEHEADER rimFileHeader = {
-				0x4D4952,
+				0x5249,
 				static_cast<uint32_t>(sizeof(RIMFILEHEADER) + sizeof(RIMINFOHEADER) + rimData.size()),
 				0, 0, sizeof(RIMFILEHEADER) + sizeof(RIMINFOHEADER)
 			};
@@ -145,7 +151,7 @@ int Tools::convert(int argc, char** argv) {
 				printf("Error opening file");
 				return -1;
 			}
-			std::ifstream bmFile(to, std::ios::binary);
+			std::ofstream bmFile(to, std::ios::binary);
 
 			RIMFILEHEADER rimFileHeader;
 			RIMINFOHEADER rimInfoHeader;
@@ -153,11 +159,59 @@ int Tools::convert(int argc, char** argv) {
 			rimFile.read(reinterpret_cast<char*>(&rimFileHeader), sizeof(rimFileHeader));
 			rimFile.read(reinterpret_cast<char*>(&rimInfoHeader), sizeof(rimInfoHeader));
 			
-			// 4D4952 is RIM in HEX
-			if (rimFileHeader.bfType != 0x4D4952) {
+			// 5249 is RI in HEX
+			if (rimFileHeader.bfType != 0x5249) {
 				printf("The provided file is not a RIM");
 				return -1;
 			}
+
+			int rimRowSize = ((rimInfoHeader.biBitCount * rimInfoHeader.biWidth + 31) / 32) * 4;
+			std::vector<uint8_t> rimData(rimRowSize* abs(rimInfoHeader.biHeight));
+
+			rimFile.seekg(rimFileHeader.bfOffBits, std::ios::beg);
+			rimFile.read(reinterpret_cast<char*>(rimData.data()), rimData.size());
+			rimFile.close();
+
+			std::vector<uint8_t> bmData(rimInfoHeader.biWidth * rimInfoHeader.biHeight * 3);
+			for (size_t y = 0; y < abs(rimInfoHeader.biHeight); y++)
+			{
+				for (size_t x = 0; x < rimInfoHeader.biWidth; x++)
+				{
+					//int bmIndex = y * bmRowSize + x * 3;
+					//int rimIndex = (y * bmInfoHeader.biWidth + x) * 4;
+					int rimIndex = y * rimRowSize + x * (rimInfoHeader.biBitCount / 8);
+					int bmIndex = (y * rimInfoHeader.biWidth + x) * 4;
+
+					if (rimIndex + 2 >= rimData.size() || bmIndex + 3 >= bmData.size()) {
+						printf("Failed to transfer pixel (%dx%d)", x, y);
+					}
+
+					uint8_t r = rimData[rimIndex + 0];
+					uint8_t g = rimData[rimIndex + 1];
+					uint8_t b = rimData[rimIndex + 2];
+					//uint8_t a = rimData[rimIndex + 3];
+
+					bmData[rimIndex + 0] = b;	 // Blue
+					bmData[rimIndex + 1] = g;    // Green
+					bmData[rimIndex + 2] = r;    // Red
+				}
+			}
+
+			BITMAPFILEHEADER bmFileHeader = {
+				0x4D42,
+				static_cast<uint32_t>(sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + bmData.size()),
+				0, 0, sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)
+			};
+			BITMAPINFOHEADER bmInfoHeader = {
+				sizeof(BITMAPINFOHEADER), rimInfoHeader.biWidth, rimInfoHeader.biHeight,
+				1, 32, 0, static_cast<uint32_t>(rimData.size()),
+				rimInfoHeader.biXPelsPerMeter, rimInfoHeader.biYPelsPerMeter,
+				0, 0
+			};
+
+			bmFile.write(reinterpret_cast<const char*>(&bmFileHeader), sizeof(bmFileHeader));
+			bmFile.write(reinterpret_cast<const char*>(&bmInfoHeader), sizeof(bmInfoHeader));
+			bmFile.write(reinterpret_cast<const char*>(bmData.data()), bmData.size());
 
 			rimFile.close();
 			bmFile.close();
