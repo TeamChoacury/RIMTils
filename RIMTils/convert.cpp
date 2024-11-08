@@ -132,8 +132,12 @@ int Tools::convert(int argc, char** argv) {
 					rimData[rimIndex + 3] = 0xFF; // Alpha
 
 					if (debug) {
-						printf("Pixel data at pos %dx%d: R%d G%d B%d A%d\n", x, y, rimData[rimIndex + 0],
-							rimData[rimIndex + 1], rimData[rimIndex + 2], rimData[rimIndex + 3]);
+						printf("BGR --> RGBA:\n   X: %d Y: %d\n   B: %d G: %d B: %d\n   R: %d G: %d B: %d A: %d\n",
+							x, y,
+							bmData[bmIndex + 0], bmData[bmIndex + 1], bmData[bmIndex + 2],
+							rimData[rimIndex + 0], rimData[rimIndex + 1], rimData[rimIndex + 2], rimData[rimIndex + 3]);
+						//printf("Pixel data at pos %dx%d: R%d G%d B%d A%d\n", x, y, rimData[rimIndex + 0],
+							//rimData[rimIndex + 1], rimData[rimIndex + 2], rimData[rimIndex + 3]);
 					}
 				}
 			}
@@ -178,7 +182,7 @@ int Tools::convert(int argc, char** argv) {
 			}
 
 			int rimRowSize = ((rimInfoHeader.biBitCount * rimInfoHeader.biWidth + 31) / 32) * 4;
-			std::vector<uint8_t> rimData(rimRowSize* abs(rimInfoHeader.biHeight));
+			std::vector<uint8_t> rimData(rimRowSize * abs(rimInfoHeader.biHeight));
 
 			rimFile.seekg(rimFileHeader.bfOffBits, std::ios::beg);
 			rimFile.read(reinterpret_cast<char*>(rimData.data()), rimData.size());
@@ -209,8 +213,12 @@ int Tools::convert(int argc, char** argv) {
 					bmData[rimIndex + 2] = r;    // Red
 
 					if (debug) {
-						printf("Pixel data at pos %dx%d: B%d G%d R%d\n", x, y, bmData[rimIndex + 0],
-							bmData[rimIndex + 1], bmData[rimIndex + 2]);
+						printf("RGBA --> BGR:\n   X: %d Y: %d\n   B: %d G: %d B: %d\n   R: %d G: %d B: %d A: %d\n",
+							x, y,
+							bmData[bmIndex + 0], bmData[bmIndex + 1], bmData[bmIndex + 2],
+							rimData[rimIndex + 0], rimData[rimIndex + 1], rimData[rimIndex + 2], rimData[rimIndex + 3]);
+						//printf("Pixel data at pos %dx%d: B%d G%d R%d\n", x, y, bmData[rimIndex + 0],
+							//bmData[rimIndex + 1], bmData[rimIndex + 2]);
 					}
 				}
 			}
