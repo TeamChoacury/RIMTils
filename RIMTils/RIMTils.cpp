@@ -28,7 +28,7 @@ int main(int argc, char** argv)
         return 0;
     }
     else if (strcmp(argv[1], "info") == 0) {
-        return 0;
+        return Tools::info(argc, argv);
     }
     else {
         printf("\"%s\" is not a valid mode, run RIMTils without any arguments to see the available modes", argv[1]);

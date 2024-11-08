@@ -24,6 +24,9 @@
     <ClCompile Include="convert.cpp">
       <Filter>Tools</Filter>
     </ClCompile>
+    <ClCompile Include="info.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Tools.h">
