@@ -188,15 +188,17 @@ int Tools::convert(int argc, char** argv) {
 			rimFile.read(reinterpret_cast<char*>(rimData.data()), rimData.size());
 			rimFile.close();
 
-			std::vector<uint8_t> bmData(rimInfoHeader.biWidth * rimInfoHeader.biHeight * 3);
+			std::vector<uint8_t> bmData(rimInfoHeader.biWidth * rimInfoHeader.biHeight * 4); // Was 3 now 4
 			for (size_t y = 0; y < abs(rimInfoHeader.biHeight); y++)
 			{
 				for (size_t x = 0; x < rimInfoHeader.biWidth; x++)
 				{
 					//int bmIndex = y * bmRowSize + x * 3;
 					//int rimIndex = (y * bmInfoHeader.biWidth + x) * 4;
-					int rimIndex = y * rimRowSize + x * (rimInfoHeader.biBitCount / 8);
-					int bmIndex = (y * rimInfoHeader.biWidth + x) * 4;
+					//int rimIndex = y * rimRowSize + x * (rimInfoHeader.biBitCount / 8);
+					//int bmIndex = (y * rimInfoHeader.biWidth + x) * 4;
+					int rimIndex = (y * rimInfoHeader.biWidth + x) * 4;
+					int bmIndex = y * rimRowSize + x * (rimInfoHeader.biBitCount / 8);
 
 					if (rimIndex + 2 >= rimData.size() || bmIndex + 3 >= bmData.size()) {
 						printf("Failed to transfer pixel (%dx%d)\n", x, y);
@@ -208,9 +210,9 @@ int Tools::convert(int argc, char** argv) {
 					uint8_t b = rimData[rimIndex + 2];
 					//uint8_t a = rimData[rimIndex + 3];
 
-					bmData[rimIndex + 0] = b;	 // Blue
-					bmData[rimIndex + 1] = g;    // Green
-					bmData[rimIndex + 2] = r;    // Red
+					bmData[bmIndex + 0] = b;	 // Blue
+					bmData[bmIndex + 1] = g;     // Green
+					bmData[bmIndex + 2] = r;     // Red
 
 					if (debug) {
 						printf("RGBA --> BGR:\n   X: %d Y: %d\n   B: %d G: %d B: %d\n   R: %d G: %d B: %d A: %d\n",
